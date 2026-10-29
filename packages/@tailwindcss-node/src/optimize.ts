@@ -155,6 +155,14 @@ export function optimize(
  * platforms.
  */
 function loadLightningcss(): typeof import('lightningcss') {
+  // Bun's bundler only includes a dependency when it can see a literal
+  // `require('lightningcss')` call. A `createRequire()` result is opaque to it, so the
+  // standalone builds would ship without the native binding and `--minify` would fail
+  // at runtime. Bun exposes `require` in ESM, so use it there.
+  if (typeof process !== 'undefined' && (process.versions as any)?.bun) {
+    return require('lightningcss')
+  }
+
   // This module is bundled for both ESM and CJS: `import.meta.url` only exists in the
   // ESM build and `__filename` only exists in the CJS build.
   let localRequire = Module.createRequire(
